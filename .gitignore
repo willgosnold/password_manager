@@ -1,3 +1,6 @@
+# Project specific
+vault.db
+
 # MacOS
 .DS_Store
 
