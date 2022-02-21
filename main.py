@@ -9,7 +9,7 @@ import sqlite3
 class CharTypes(Enum):
     UPPER = string.ascii_uppercase     # Capital
     LOWER = string.ascii_lowercase     # Small
-    DIGITS = string.digits              # Digits
+    DIGITS = string.digits             # Digits
     SPECIAL = string.punctuation       # Special
 
 
