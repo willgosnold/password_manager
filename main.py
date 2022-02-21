@@ -13,10 +13,10 @@ class CharTypes(Enum):
     SPECIAL = string.punctuation       # Special
 
 
-def generate(min_length=12, max_length=20, upper=1, lower=1, digits=1, special=1):
+def generate(min_length=14, max_length=20, upper=1, lower=1, digits=1, special=1):
     char_counts = (upper, lower, digits, special)
     num_chars = sum(char_counts)
-    target_length = min_length + randbelow(max_length - min_length)
+    target_length = min_length + randbelow(max_length - min_length + 1)
 
     # Get list of enums to pass `secrets.choice` call excluding
     # those where arg=0.
@@ -34,52 +34,63 @@ def generate(min_length=12, max_length=20, upper=1, lower=1, digits=1, special=1
 
 
 def create_db():
-    vault = sqlite3.connect("vault.db")
-    cur = vault.cursor()
+    con = sqlite3.connect("vault.db")
+    cur = con.cursor()
     cur.execute("CREATE TABLE passwords(site UNIQUE, password)")
-    vault.close()
+    con.close()
 
 
 def add_to_vault(site, password):
     try:
-        vault = sqlite3.connect("vault.db")
-        cur = vault.cursor()
+        con = sqlite3.connect("vault.db")
+        cur = con.cursor()
         cur.execute("INSERT INTO passwords VALUES(?, ?)", (site, password))
-        vault.commit()
-        vault.close()
+        con.commit()
+        con.close()
     except sqlite3.IntegrityError:
         print(f"You already have a password for {site}.")
-        vault.close()
+        if con:
+            con.close()
 
 
 def show_all():
-    vault = sqlite3.connect("vault.db")
-    cur = vault.cursor()
-    for row in cur.execute("SELECT * FROM passwords"):
-        print(row)
-    vault.close()
+    con = sqlite3.connect("vault.db")
+    cur = con.cursor()
+    for i, row in enumerate(cur.execute("SELECT * FROM passwords")):
+        print(f"{i+1}) {row[0]}: {row[1]}")
+    con.close()
 
 
 def retrieve(site):
-    vault = sqlite3.connect("vault.db")
-    cur = vault.cursor()
+    con = sqlite3.connect("vault.db")
+    cur = con.cursor()
     for row in cur.execute("SELECT password FROM passwords where site=?", (site,)):
         password = row
-    vault.close()
+    con.close()
     return password[0]
 
 
 def delete(site):
-    vault = sqlite3.connect("vault.db")
-    cur = vault.cursor()
+    con = sqlite3.connect("vault.db")
+    cur = con.cursor()
     cur.execute("DELETE from passwords where site=?", (site,))
-    vault.commit()
-    vault.close()
+    con.commit()
+    con.close()
+
+
+def purge_table():
+    con = sqlite3.connect("vault.db")
+    cur = con.cursor()
+    cur.execute("DELETE from passwords")
+    con.commit()
+    con.close()
 
 
 if __name__ == '__main__':
-    add_to_vault('facebook', 'test2')
-    # print(retrieve('facebook'))
+    sites = ["amazon", "facebook", "google", "twitter", "instagram"]
+    for site in sites:
+        add_to_vault(site, generate())
+    # print(retrieve('amazon'))
     # delete('facebook')
-    # show_all()
+    # purge_table()
     show_all()
