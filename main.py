@@ -4,6 +4,7 @@ from random import shuffle
 from itertools import chain
 from secrets import choice, randbelow
 import sqlite3
+from access_db import AccessDB
 
 
 class CharTypes(Enum):
@@ -34,63 +35,66 @@ def generate(min_length=14, max_length=20, upper=1, lower=1, digits=1, special=1
 
 
 def create_db():
-    con = sqlite3.connect("vault.db")
-    cur = con.cursor()
-    cur.execute("CREATE TABLE passwords(site UNIQUE, password)")
-    con.close()
+    with AccessDB("vault.db") as db:
+        db.execute(
+            ("CREATE TABLE if not exists passwords(site UNIQUE, password)"))
 
 
-def add_to_vault(site, password):
-    try:
-        con = sqlite3.connect("vault.db")
-        cur = con.cursor()
-        cur.execute("INSERT INTO passwords VALUES(?, ?)", (site, password))
-        con.commit()
-        con.close()
-    except sqlite3.IntegrityError:
-        print(f"You already have a password for {site}.")
-        if con:
-            con.close()
+def add_password(site, password):
+    with AccessDB("vault.db") as db:
+        db.execute("INSERT INTO passwords VALUES(?, ?)", (site, password))
+        return password
 
 
 def show_all():
-    con = sqlite3.connect("vault.db")
-    cur = con.cursor()
-    for i, row in enumerate(cur.execute("SELECT * FROM passwords")):
-        print(f"{i+1}) {row[0]}: {row[1]}")
-    con.close()
+    with AccessDB("vault.db") as db:
+        for i, row in enumerate(db.execute("SELECT * FROM passwords")):
+            print(f"{i+1}) {row[0]}: {row[1]}")
 
 
-def retrieve(site):
-    con = sqlite3.connect("vault.db")
-    cur = con.cursor()
-    for row in cur.execute("SELECT password FROM passwords where site=?", (site,)):
-        password = row
-    con.close()
-    return password[0]
+def retrieve_password(site):
+    with AccessDB("vault.db") as db:
+        for row in db.execute("SELECT password FROM passwords where site=?", (site,)):
+            password = row
+            return password[0]
 
 
-def delete(site):
-    con = sqlite3.connect("vault.db")
-    cur = con.cursor()
-    cur.execute("DELETE from passwords where site=?", (site,))
-    con.commit()
-    con.close()
+def delete_password(site):
+    with AccessDB("vault.db") as db:
+        db.execute("DELETE from passwords where site=?", (site,))
 
 
 def purge_table():
-    con = sqlite3.connect("vault.db")
-    cur = con.cursor()
-    cur.execute("DELETE from passwords")
-    con.commit()
-    con.close()
+    with AccessDB("vault.db") as db:
+        db.execute("DELETE from passwords")
 
 
 if __name__ == '__main__':
-    sites = ["amazon", "facebook", "google", "twitter", "instagram"]
-    for site in sites:
-        add_to_vault(site, generate())
-    # print(retrieve('amazon'))
-    # delete('facebook')
+    create_db()
+    while True:
+        func = input(
+            '''What would you like to do? \n
+            (add_password | retrieve_password | delete_password | close) ''')
+        print(func)
+        site = input("Which site? ")
+        if func == "add_password":
+            print(add_password(site, generate()))
+        elif func == "retrieve_password":
+            print(retrieve_password(site))
+        elif func == "delete_password":
+            delete_password(site)
+            print(f"Password for {site} deleted.")
+        elif func == "close":
+            break
+        else:
+            print("Please enter a valid command.")
+
+    # sites = ["amazon", "facebook", "google", "twitter", "instagram"]
+    # for site in sites:
+    #     add_password(site, generate())
+
+    # print(retrieve_password('amazon'))
+    # delete_password('facebook')
     # purge_table()
-    show_all()
+    # add_password("amazon", generate())
+    # show_all()
