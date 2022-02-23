@@ -69,19 +69,19 @@ def purge_table():
         db.execute("DELETE from passwords")
 
 
-if __name__ == '__main__':
+def main():
     create_db()
     while True:
         func = input(
-            '''What would you like to do? \n
-            (add_password | retrieve_password | delete_password | close) ''')
-        print(func)
-        site = input("Which site? ")
+            "\nWhat would you like to do?\n(add_password | retrieve_password | delete_password | close)\n\n")
         if func == "add_password":
+            site = input("\nWhich site?: ")
             print(add_password(site, generate()))
         elif func == "retrieve_password":
+            site = input("\nWhich site?: ")
             print(retrieve_password(site))
         elif func == "delete_password":
+            site = input("\nWhich site?: ")
             delete_password(site)
             print(f"Password for {site} deleted.")
         elif func == "close":
@@ -89,6 +89,9 @@ if __name__ == '__main__':
         else:
             print("Please enter a valid command.")
 
+
+if __name__ == '__main__':
+    main()
     # sites = ["amazon", "facebook", "google", "twitter", "instagram"]
     # for site in sites:
     #     add_password(site, generate())
