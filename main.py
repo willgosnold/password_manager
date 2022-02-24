@@ -91,7 +91,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
     # sites = ["amazon", "facebook", "google", "twitter", "instagram"]
     # for site in sites:
     #     add_password(site, generate())
@@ -100,4 +100,4 @@ if __name__ == '__main__':
     # delete_password('facebook')
     # purge_table()
     # add_password("amazon", generate())
-    # show_all()
+    show_all()
